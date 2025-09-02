@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>File Upload Client</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(120deg, #e0eafc 0%, #cfdef3 100%);
+      min-height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      max-width: 400px;
+      margin: 60px auto;
+      padding: 32px 24px;
+      text-align: center;
+    }
+    h2 {
+      color: #2b5876;
+      margin-bottom: 24px;
+    }
+    input[type="file"] {
+      margin-bottom: 16px;
+      border: 1px solid #b0c4de;
+      border-radius: 6px;
+      padding: 8px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    button {
+      background: linear-gradient(90deg, #2b5876 0%, #4e4376 100%);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 24px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: linear-gradient(90deg, #4e4376 0%, #2b5876 100%);
+    }
+    .result {
+      margin-top: 24px;
+      font-size: 16px;
+      padding: 12px;
+      border-radius: 8px;
+      display: none;
+    }
+    .result.success {
+      background: #e6ffe6;
+      color: #2e7d32;
+      border: 1px solid #b2dfdb;
+      display: block;
+    }
+    .result.error {
+      background: #ffe6e6;
+      color: #c62828;
+      border: 1px solid #ffcdd2;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>העלאת קובץ לשרת</h2>
+    <form id="uploadForm">
+      <input type="file" name="file" id="fileInput" required />
+      <br />
+      <button type="submit">העלה</button>
+    </form>
+  <div class="result" id="result"></div>
+  </div>
+  <script>
+    const resultDiv = document.getElementById('result');
+    document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      resultDiv.style.display = 'none';
+      resultDiv.className = 'result';
+      resultDiv.innerHTML = '';
+      const fileInput = document.getElementById('fileInput');
+      const file = fileInput.files[0];
+      if (!file) {
+        resultDiv.innerHTML = 'אנא בחר קובץ להעלאה.';
+        resultDiv.classList.add('error');
+        resultDiv.style.display = 'block';
+        return;
+      }
+      const formData = new FormData();
+      formData.append('file', file);
+      try {
+        const res = await fetch('http://localhost:5000/upload', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (data.success) {
+          resultDiv.innerHTML = '✔️ הקובץ הועלה בהצלחה!';
+          resultDiv.classList.add('success');
+          setTimeout(() => {
+            resultDiv.style.display = 'none';
+            document.getElementById('uploadForm').reset();
+          }, 2000);
+        } else {
+          resultDiv.innerHTML = '❌ שגיאה: ' + (data.error || '');
+          resultDiv.classList.add('error');
+          resultDiv.style.display = 'block';
+        }
+      } catch (err) {
+        resultDiv.innerHTML = 'שגיאת רשת. נסה שוב.';
+        resultDiv.classList.add('error');
+        resultDiv.style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>
